@@ -1,0 +1,20 @@
+{
+    "name":"jonathan-martz/lumen-borat-controller",
+    "description":"Php Lumen Borat Controller",
+    "require":{
+        "php":"^7.1",
+        "laravel/lumen-framework": "^5.6.0",
+        "jonathan-martz/lumen-controller": "^0.2"
+    },
+    "autoload": {
+        "classmap": ["controller/"]
+    },
+    "authors": [
+        {
+            "name": "Jonathan Martz",
+            "email": "composer@jmartz.de",
+            "homepage": "https://www.jmartz.de",
+            "role": "Developer"
+        }
+    ]
+}

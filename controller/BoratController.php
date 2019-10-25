@@ -34,8 +34,6 @@ class BoratController extends Controller
 
     public function package(Request $request){
         $routeInfo = $request->route();
-        // var_dump($routeInfo[2]['vendor']);
-        // var_dump($routeInfo[2]['module']);
 
         $package = DB::table('packages')
             ->where('vendor','=',$routeInfo[2]['vendor'])
@@ -77,6 +75,10 @@ class BoratController extends Controller
     }
 
     public function cloneRepo($package){
+        if(!file_exists('repo/'.$package->vendor)){
+            shell_exec('rm -rf repo/'.$package->vendor);
+        }
+
         if(!file_exists('repo')){
             mkdir('repo');
         }
@@ -85,7 +87,7 @@ class BoratController extends Controller
             mkdir('repo/'.$package->vendor);
         }
 
-        $command = 'cd repo/'.$package->vendor . ' && git clone '.$package->repo.' '.$package->module . ' 2>&1';
+        $command = 'cd repo/'.$package->vendor . ' rm -rf '.$package->module . ' && git clone '.$package->repo.' '.$package->module . ' 2>&1';
 
         $output = shell_exec($command);
     }

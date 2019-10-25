@@ -75,7 +75,7 @@ class BoratController extends Controller
     }
 
     public function cloneRepo($package){
-        if(!file_exists('repo/'.$package->vendor)){
+        if(file_exists('repo/'.$package->vendor)){
             shell_exec('rm -rf repo/'.$package->vendor);
         }
 

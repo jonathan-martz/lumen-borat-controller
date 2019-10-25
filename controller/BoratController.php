@@ -27,9 +27,9 @@ class BoratController extends Controller
             ];
         }
 
-        return response()->json([
+        return response()->json(
             $json
-        ]);
+        );
     }
 
     public function package(Request $request){

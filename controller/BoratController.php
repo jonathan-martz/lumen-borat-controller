@@ -51,10 +51,50 @@ class BoratController extends Controller
         );
     }
 
-    public function getComposerData($package, $hash, $exec){
+    public function getComposerData($package, $version, $hash){
         $composer = shell_exec('cd repo/' . $package->fullname . ' && git show '.$hash.':composer.json'. ' 2>&1');
 
-        return json_decode($composer);
+        $composer = json_decode($composer, JSON_FORCE_OBJECT);
+
+        $composer['uid'] = $hash;
+        $composer['version_normalized'] = $this->normalizeVersion($version);
+        $composer['version'] = $version;
+        $composer['dist'] = [
+            "type" => "zip",
+            "url" => 'https://borat.jmartz.de/private/dists/' . $package->fullname . '/' . $this->normalizeVersion($version) . '/' . $hash . '.zip',
+            "reference" => $hash,
+            "shasum" => ""
+        ];
+
+        $composer['source'] = [
+            "type" => "git",
+            "url" => $package->repo,
+            "reference" => $hash
+        ];
+
+        $composer['time'] = time();
+
+        $composer['support'] = [
+            'source' => ''
+        ];
+
+        return $composer;
+    }
+
+    public function normalizeVersion($version){
+        // Todo: rewrite function!!!
+        $tmp = explode('.', $version);
+        if(count($tmp) !== 1){
+            if(count($tmp) === 2){
+                $version .= '.0.0';
+            }
+            else{
+                if(count($tmp) === 3){
+                    $version .= '.0';
+                }
+            }
+        }
+        return $version;
     }
 
     public function generatePackage($package, array $versions):array{

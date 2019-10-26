@@ -51,8 +51,33 @@ class BoratController extends Controller
         );
     }
 
+    public function downloadZip($package, $version, $hash){
+        if(!file_exists('dists')){
+            mkdir('dists');
+        }
+
+        if(!file_exists('dists/' .$package->vendor)){
+            mkdir('dists/'.$package->vendor);
+        }
+
+        if(!file_exists('dists/' . $package->fullname)){
+            mkdir('dists/'. $package->fullname);
+        }
+
+        if(!file_exists('dists/' .$package->fullname.'/'.$this->normalizeVersion($version))){
+            mkdir('dists/' .$package->fullname.'/'.$this->normalizeVersion($version));
+        }
+
+        $path = 'repo/' . $package->fullname;
+        $file = '../../../dists/' . $package->fullname . '/' . $this->normalizeVersion($version) . '/' . $hash;
+        $cmd = 'cd ' . $path . ' && git archive --format zip -o ' . $file . '.zip ' . $hash.' 2>&1';
+        $exec = shell_exec($cmd);
+    }
+
     public function getComposerData($package, $version, $hash){
         $composer = shell_exec('cd repo/' . $package->fullname . ' && git show '.$hash.':composer.json'. ' 2>&1');
+
+        $this->downloadZip($package, $version, $hash);
 
         $composer = json_decode($composer, JSON_FORCE_OBJECT);
 

@@ -3,7 +3,6 @@
     "description":"Php Lumen Borat Controller",
     "require":{
         "php":"^7.1",
-        "laravel/lumen-framework": "^v6.2.0",
         "ext-json": "*"
     },
     "autoload": {

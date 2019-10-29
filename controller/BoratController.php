@@ -35,20 +35,37 @@ class BoratController extends Controller
     public function package(Request $request){
         $routeInfo = $request->route();
 
-        $package = DB::table('packages')
-            ->where('vendor','=',$routeInfo[2]['vendor'])
-            ->where('module','=',$routeInfo[2]['module']);
+        if(!file_exists('cache')){
+            mkdir('cache');
+        }
 
-        $package = $package->first();
+        $filename = 'cache/'.$routeInfo[2]['vendor'].'-'.$routeInfo[2]['module'].'.json';
 
-        $this->cloneRepo($package);
-        $versions = $this->listVersions($package);
+        if(!file_exists($filename)){
+            $package = DB::table('packages')
+                ->where('vendor','=',$routeInfo[2]['vendor'])
+                ->where('module','=',$routeInfo[2]['module']);
 
-        $data = $this->generatePackage($package, $versions);
+            $package = $package->first();
 
-        return response()->json(
-            $data
-        );
+            $this->cloneRepo($package);
+            $versions = $this->listVersions($package);
+
+            $data = $this->generatePackage($package, $versions);
+
+            file_put_contents($filename, json_encode($data));
+
+            return response()->json(
+                $data
+            );
+        }
+        else{
+            $file = file_get_contents($filename);
+
+            return response()->json(
+                json_decode($file)
+            );
+        }
     }
 
     public function downloadZip($package, $version, $hash){

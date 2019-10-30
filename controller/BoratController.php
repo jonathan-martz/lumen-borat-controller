@@ -8,7 +8,7 @@ use \Illuminate\Support\Facades\DB;
 use \Illuminate\Support\Facades\Hash;
 
 
-class BoratController extends Controller
+class BoratController
 {
     public function packages(Request $request){
         $packages = DB::table('packages');

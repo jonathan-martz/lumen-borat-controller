@@ -11,26 +11,43 @@ use \Illuminate\Support\Facades\Hash;
 class BoratController
 {
     public function packages(Request $request){
-        $packages = DB::table('packages');
-
-        $json = [
-            'providers' => [],
-            'mirrors' => [
-                'dist-url' => 'https://api-borat.jmartz.de/dists/%package%/%version%/%reference%.%type%',
-                'preferred' => true
-            ],
-            'providers-url' => '/p/%package%.json'
-        ];
-
-        foreach ($packages->get() as $key => $value){
-            $json['providers'][$value->fullname] = [
-                'sha256' => null
-            ];
+        if(!file_exists('cache')){
+            mkdir('cache');
         }
 
-        return response()->json(
-            $json
-        );
+        $filename = 'cache/packages.json';
+
+        if(file_exists($filename)){
+            $file = file_get_contents($filename);
+
+            return response()->json(
+                json_decode($file)
+            );
+        }
+        else{
+            $packages = DB::table('packages');
+
+            $json = [
+                'providers' => [],
+                'mirrors' => [
+                    'dist-url' => 'https://api-borat.jmartz.de/dists/%package%/%version%/%reference%.%type%',
+                    'preferred' => true
+                ],
+                'providers-url' => '/p/%package%.json'
+            ];
+
+            foreach ($packages->get() as $key => $value){
+                $json['providers'][$value->fullname] = [
+                    'sha256' => null
+                ];
+            }
+
+            file_put_contents($filename, json_encode($json));
+
+            return response()->json(
+                $json
+            );
+        }
     }
 
     public function package(Request $request){

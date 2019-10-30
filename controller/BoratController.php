@@ -7,7 +7,6 @@ use \Illuminate\Http\Request;
 use \Illuminate\Support\Facades\DB;
 use \Illuminate\Support\Facades\Hash;
 
-
 class BoratController
 {
     public function packages(Request $request){
@@ -190,6 +189,14 @@ class BoratController
         $command = 'cd repo/'.$package->vendor . ' rm -rf '.$package->module . ' && git clone '.$package->repo.' '.$package->module . ' 2>&1';
 
         $output = shell_exec($command);
+
+        if(strpos($output,'Permission denied') === false){
+            $status = 'erfolgreich';
+        }
+        else{
+            $status = 'failed';
+            throw new \Exception($output);
+        }
     }
 
     public function listVersions($package):array{

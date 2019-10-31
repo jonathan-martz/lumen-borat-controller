@@ -36,7 +36,7 @@ class BoratController
                             'dist-url' => 'https://api-borat.jmartz.de/'.$routeInfo[2]['type'].'/dists/%package%/%version%/%reference%.%type%',
                             'preferred' => true
                         ],
-                        'providers-url' => '/'.$routeInfo[2]['type'].'/p/%package%.json'
+                        'providers-url' => '/p/%package%.json'
                     ];
 
                     foreach ($packages->get() as $key => $value){
@@ -138,7 +138,7 @@ class BoratController
     public function getComposerData($package, $version, $hash,$routeInfo){
         $composer = shell_exec('cd '.$routeInfo[2]['type'].'/repo/' . $package->fullname . ' && git show '.$hash.':composer.json'. ' 2>&1');
 
-        $this->downloadZip($package, $version, $hash);
+        $this->downloadZip($package, $version, $hash,$routeInfo);
 
         $composer = json_decode($composer, JSON_FORCE_OBJECT);
 
@@ -190,7 +190,7 @@ class BoratController
             $exec = shell_exec($cmd);
             $exec = trim($exec, PHP_EOL);
 
-            $packages[$value] = $this->getComposerData($package, $value, $exec);
+            $packages[$value] = $this->getComposerData($package, $value, $exec,$routeInfo);
         }
 
         return [

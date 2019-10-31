@@ -36,7 +36,7 @@ class BoratController
                             'dist-url' => 'https://'.$_SERVER['SERVER_NAME'].'/'.$routeInfo[2]['type'].'/dists/%package%/%version%/%reference%.%type%',
                             'preferred' => true
                         ],
-                        'providers-url' => '/p/%package%.json'
+                        'providers-url' => '/'.$routeInfo[2]['type'].'/p/%package%.json'
                     ];
 
                     foreach ($packages->get() as $key => $value){

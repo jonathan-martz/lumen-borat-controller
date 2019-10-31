@@ -17,6 +17,7 @@ class CreatePackagesTable extends Migration
             $table->increments('id');
             $table->string('vendor');
             $table->string('module');
+            $table->string('type');
             $table->string('fullname');
             $table->string('repo');
             $table->timestamps();

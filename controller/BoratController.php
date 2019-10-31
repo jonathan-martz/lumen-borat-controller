@@ -33,7 +33,7 @@ class BoratController
                     $json = [
                         'providers' => [],
                         'mirrors' => [
-                            'dist-url' => 'https://api-borat.jmartz.de/'.$routeInfo[2]['type'].'/dists/%package%/%version%/%reference%.%type%',
+                            'dist-url' => 'https://'.$_SERVER['SERVER_NAME'].'/'.$routeInfo[2]['type'].'/dists/%package%/%version%/%reference%.%type%',
                             'preferred' => true
                         ],
                         'providers-url' => '/p/%package%.json'
@@ -147,7 +147,7 @@ class BoratController
         $composer['version'] = $version;
         $composer['dist'] = [
             "type" => "zip",
-            "url" => 'https://api-borat.jmartz.de/'.$routeInfo[2]['type'].'/dists/' . $package->fullname . '/' . $this->normalizeVersion($version) . '/' . $hash . '.zip',
+            "url" => 'https://'.$_SERVER['SERVER_NAME'].'/'.$routeInfo[2]['type'].'/dists/' . $package->fullname . '/' . $this->normalizeVersion($version) . '/' . $hash . '.zip',
             "reference" => $hash,
             "shasum" => ""
         ];
@@ -217,11 +217,7 @@ class BoratController
 
         $output = shell_exec($command);
 
-        if(strpos($output,'Permission denied') === false){
-            $status = 'erfolgreich';
-        }
-        else{
-            $status = 'failed';
+        if(strpos($output,'Permission denied') !== false){
             throw new \Exception($output);
         }
     }

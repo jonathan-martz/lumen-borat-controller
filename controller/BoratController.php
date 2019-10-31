@@ -16,7 +16,7 @@ class BoratController
                 mkdir('cache');
             }
 
-            $filename = 'cache/packages.json';
+            $filename = 'cache/'.$routeInfo[2]['type'].'.json';
 
             if(file_exists($filename)){
                 $file = file_get_contents($filename);

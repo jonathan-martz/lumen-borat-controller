@@ -205,6 +205,10 @@ class BoratController
             shell_exec('rm -rf '.$routeInfo[2]['type'].'/repo/'.$package->vendor);
         }
 
+        if(!file_exists($routeInfo[2]['type'])){
+            mkdir($routeInfo[2]['type']);
+        }
+
         if(!file_exists($routeInfo[2]['type'].'/repo')){
             mkdir($routeInfo[2]['type'].'/repo');
         }

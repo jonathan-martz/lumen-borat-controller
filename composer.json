@@ -1,6 +1,7 @@
 {
     "name":"jonathan-martz/lumen-borat-controller",
     "description":"Php Lumen Borat Controller",
+    "license": "MIT",
     "require":{
         "php":"^7.1",
         "ext-json": "*"

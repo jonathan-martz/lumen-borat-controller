@@ -4,7 +4,9 @@
     "license": "MIT",
     "require": {
         "php": "^7.3|^7.4",
-        "ext-json": "*"
+        "ext-json": "*",
+        "jonathan-martz/lumen-middelware-xss": "^0.1",
+        "jonathan-martz/lumen-middelware-https": "^0.1"
     },
     "autoload": {
         "classmap": [

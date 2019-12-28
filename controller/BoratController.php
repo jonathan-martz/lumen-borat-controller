@@ -2,23 +2,25 @@
 
 namespace App\Http\Controllers;
 
-use \Illuminate\Http\Request;
-use \Illuminate\Support\Facades\DB;
-use \Illuminate\Support\Facades\Hash;
+use Exception;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class BoratController
 {
-    public function packages(Request $request){
+    public function packages(Request $request)
+    {
         $routeInfo = $request->route();
 
-        if($routeInfo[2]['type'] == 'private' || $routeInfo[2]['type'] == 'public'){
-            if(!file_exists('cache')){
+        if ($routeInfo[2]['type'] == 'private' || $routeInfo[2]['type'] == 'public' || $routeInfo[2]['type'] == 'proxy') {
+            if (!file_exists('cache')) {
                 mkdir('cache');
             }
 
-            $filename = 'cache/'.$routeInfo[2]['type'].'.json';
+            $filename = 'cache/' . $routeInfo[2]['type'] . '.json';
 
-            if(file_exists($filename)){
+            if (file_exists($filename)) {
                 $file = file_get_contents($filename);
 
                 return response()->json(
@@ -52,30 +54,31 @@ class BoratController
                     );
                 }
                 else{
-                    throw new \Exception('No package found.');
+                    throw new Exception('No package found.');
                 }
             }
         }
         else{
-            throw new \Exception("Only public and private type available.");
+            throw new Exception("Only public and private type available.");
         }
     }
 
     public function package(Request $request){
         $routeInfo = $request->route();
 
-        if($routeInfo[2]['type'] == 'private' || $routeInfo[2]['type'] == 'public'){
-            if(!file_exists('cache')){
+        if ($routeInfo[2]['type'] == 'private' || $routeInfo[2]['type'] == 'public' || $routeInfo[2]['type'] == 'proxy') {
+            if (!file_exists('cache')) {
                 mkdir('cache');
             }
 
-            $filename = 'cache/'.$routeInfo[2]['vendor'].'-'.$routeInfo[2]['module'].'.json';
+            $filename = 'cache/' . $routeInfo[2]['vendor'] . '-' . $routeInfo[2]['module'] . '.json';
 
-            if(!file_exists($filename)){
+            if (!file_exists($filename)) {
                 $package = DB::table('packages')
-                    ->where('vendor','=',$routeInfo[2]['vendor'])
-                    ->where('module','=',$routeInfo[2]['module'])
+                    ->where('vendor', '=', $routeInfo[2]['vendor'])
+                    ->where('module', '=', $routeInfo[2]['module'])
                     ->where('type','=',$routeInfo[2]['type']);
+
 
                 if($package->count() != 0){
                     $package = $package->first();
@@ -92,7 +95,7 @@ class BoratController
                     );
                 }
                 else{
-                    throw new \Exception('No package found.');
+                    throw new Exception('No package found.');
                 }
             }
             else{
@@ -104,7 +107,7 @@ class BoratController
             }
         }
         else{
-            throw new \Exception("Only public and private type available.");
+            throw new Exception("Only public and private type available.");
         }
     }
 
@@ -222,7 +225,7 @@ class BoratController
         $output = shell_exec($command);
 
         if(strpos($output,'Permission denied') !== false){
-            throw new \Exception($output);
+            throw new Exception($output);
         }
     }
 

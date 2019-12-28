@@ -1,13 +1,15 @@
 {
-    "name":"jonathan-martz/lumen-borat-controller",
-    "description":"Php Lumen Borat Controller",
+    "name": "jonathan-martz/lumen-controller-borat",
+    "description": "Php Lumen Borat Controller",
     "license": "MIT",
-    "require":{
-        "php":"^7.3|^7.4",
+    "require": {
+        "php": "^7.3|^7.4",
         "ext-json": "*"
     },
     "autoload": {
-        "classmap": ["controller/"]
+        "classmap": [
+            "controller/"
+        ]
     },
     "authors": [
         {

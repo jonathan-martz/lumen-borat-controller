@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::post('{type}/p/{vendor}/{module}.json', [
+Route::get('{type}/p/{vendor}/{module}.json', [
     'middleware' => ['xss', 'https'],
     'uses' => 'BoratController@package'
 ]);

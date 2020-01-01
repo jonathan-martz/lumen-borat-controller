@@ -7,41 +7,51 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
+/**
+ * Class BoratController
+ * @package App\Http\Controllers
+ */
 class BoratController
 {
+    /**
+     * @param Request $request
+     * @return mixed
+     * @throws Exception
+     * @todo replace $request with $this->request
+     */
     public function packages(Request $request)
     {
         $routeInfo = $request->route();
 
-        if ($routeInfo[2]['type'] == 'private' || $routeInfo[2]['type'] == 'public' || $routeInfo[2]['type'] == 'proxy') {
-            if (!file_exists('cache')) {
+        if($routeInfo[2]['type'] == 'private' || $routeInfo[2]['type'] == 'public' || $routeInfo[2]['type'] == 'proxy') {
+            if(!file_exists('cache')) {
                 mkdir('cache');
             }
 
             $filename = 'cache/' . $routeInfo[2]['type'] . '.json';
 
-            if (file_exists($filename)) {
+            if(file_exists($filename)) {
                 $file = file_get_contents($filename);
 
                 return response()->json(
                     json_decode($file)
                 );
             }
-            else{
+            else {
                 $packages = DB::table('packages');
-                $packages->where('type','=',$routeInfo[2]['type']);
+                $packages->where('type', '=', $routeInfo[2]['type']);
 
-                if($packages->count() != 0){
+                if($packages->count() != 0) {
                     $json = [
                         'providers' => [],
                         'mirrors' => [
-                            'dist-url' => 'https://'.$_SERVER['SERVER_NAME'].'/'.$routeInfo[2]['type'].'/dists/%package%/%version%/%reference%.%type%',
+                            'dist-url' => 'https://' . $_SERVER['SERVER_NAME'] . '/' . $routeInfo[2]['type'] . '/dists/%package%/%version%/%reference%.%type%',
                             'preferred' => true
                         ],
-                        'providers-url' => '/'.$routeInfo[2]['type'].'/p/%package%.json'
+                        'providers-url' => '/' . $routeInfo[2]['type'] . '/p/%package%.json'
                     ];
 
-                    foreach ($packages->get() as $key => $value){
+                    foreach($packages->get() as $key => $value) {
                         $json['providers'][$value->fullname] = [
                             'sha256' => null
                         ];
@@ -53,40 +63,46 @@ class BoratController
                         $json
                     );
                 }
-                else{
+                else {
                     throw new Exception('No package found.');
                 }
             }
         }
-        else{
+        else {
             throw new Exception("Only public and private type available.");
         }
     }
 
-    public function package(Request $request){
+    /**
+     * @param Request $request
+     * @return mixed
+     * @throws Exception
+     */
+    public function package(Request $request)
+    {
         $routeInfo = $request->route();
 
-        if ($routeInfo[2]['type'] == 'private' || $routeInfo[2]['type'] == 'public' || $routeInfo[2]['type'] == 'proxy') {
-            if (!file_exists('cache')) {
+        if($routeInfo[2]['type'] == 'private' || $routeInfo[2]['type'] == 'public' || $routeInfo[2]['type'] == 'proxy') {
+            if(!file_exists('cache')) {
                 mkdir('cache');
             }
 
             $filename = 'cache/' . $routeInfo[2]['vendor'] . '-' . $routeInfo[2]['module'] . '.json';
 
-            if (!file_exists($filename)) {
+            if(!file_exists($filename)) {
                 $package = DB::table('packages')
                     ->where('vendor', '=', $routeInfo[2]['vendor'])
                     ->where('module', '=', $routeInfo[2]['module'])
-                    ->where('type','=',$routeInfo[2]['type']);
+                    ->where('type', '=', $routeInfo[2]['type']);
 
 
-                if($package->count() != 0){
+                if($package->count() != 0) {
                     $package = $package->first();
 
-                    $this->cloneRepo($package,$routeInfo);
-                    $versions = $this->listVersions($package,$routeInfo);
+                    $this->cloneRepo($package, $routeInfo);
+                    $versions = $this->listVersions($package, $routeInfo);
 
-                    $data = $this->generatePackage($package, $versions,$routeInfo);
+                    $data = $this->generatePackage($package, $versions, $routeInfo);
 
                     file_put_contents($filename, json_encode($data));
 
@@ -94,11 +110,11 @@ class BoratController
                         $data
                     );
                 }
-                else{
+                else {
                     throw new Exception('No package found.');
                 }
             }
-            else{
+            else {
                 $file = file_get_contents($filename);
 
                 return response()->json(
@@ -106,42 +122,57 @@ class BoratController
                 );
             }
         }
-        else{
+        else {
             throw new Exception("Only public and private type available.");
         }
     }
 
-    public function downloadZip($package, $version, $hash,$routeInfo){
-        if(!file_exists($routeInfo[2]['type'])){
+    /**
+     * @param $package
+     * @param $version
+     * @param $hash
+     * @param $routeInfo
+     */
+    public function downloadZip($package, $version, $hash, $routeInfo)
+    {
+        if(!file_exists($routeInfo[2]['type'])) {
             mkdir($routeInfo[2]['type']);
         }
 
-        if(!file_exists($routeInfo[2]['type'].'/dists')){
-            mkdir($routeInfo[2]['type'].'/dists');
+        if(!file_exists($routeInfo[2]['type'] . '/dists')) {
+            mkdir($routeInfo[2]['type'] . '/dists');
         }
 
-        if(!file_exists($routeInfo[2]['type'].'/dists/' .$package->vendor)){
-            mkdir($routeInfo[2]['type'].'/dists/'.$package->vendor);
+        if(!file_exists($routeInfo[2]['type'] . '/dists/' . $package->vendor)) {
+            mkdir($routeInfo[2]['type'] . '/dists/' . $package->vendor);
         }
 
-        if(!file_exists($routeInfo[2]['type'].'/dists/' . $package->fullname)){
-            mkdir($routeInfo[2]['type'].'/dists/'. $package->fullname);
+        if(!file_exists($routeInfo[2]['type'] . '/dists/' . $package->fullname)) {
+            mkdir($routeInfo[2]['type'] . '/dists/' . $package->fullname);
         }
 
-        if(!file_exists($routeInfo[2]['type'].'/dists/' .$package->fullname.'/'.$this->normalizeVersion($version))){
-            mkdir($routeInfo[2]['type'].'/dists/' .$package->fullname.'/'.$this->normalizeVersion($version));
+        if(!file_exists($routeInfo[2]['type'] . '/dists/' . $package->fullname . '/' . $this->normalizeVersion($version))) {
+            mkdir($routeInfo[2]['type'] . '/dists/' . $package->fullname . '/' . $this->normalizeVersion($version));
         }
 
-        $path = $routeInfo[2]['type'].'/repo/' . $package->fullname;
-        $file = '../../../'.$routeInfo[2]['type'].'/dists/' . $package->fullname . '/' . $this->normalizeVersion($version) . '/' . $hash;
-        $cmd = 'cd ' . $path . ' && git archive --format zip -o ' . $file . '.zip ' . $hash.' 2>&1';
+        $path = $routeInfo[2]['type'] . '/repo/' . $package->fullname;
+        $file = '../../../' . $routeInfo[2]['type'] . '/dists/' . $package->fullname . '/' . $this->normalizeVersion($version) . '/' . $hash;
+        $cmd = 'cd ' . $path . ' && git archive --format zip -o ' . $file . '.zip ' . $hash . ' 2>&1';
         $exec = shell_exec($cmd);
     }
 
-    public function getComposerData($package, $version, $hash,$routeInfo){
-        $composer = shell_exec('cd '.$routeInfo[2]['type'].'/repo/' . $package->fullname . ' && git show '.$hash.':composer.json'. ' 2>&1');
+    /**
+     * @param $package
+     * @param $version
+     * @param $hash
+     * @param $routeInfo
+     * @return mixed|string|null
+     */
+    public function getComposerData($package, $version, $hash, $routeInfo)
+    {
+        $composer = shell_exec('cd ' . $routeInfo[2]['type'] . '/repo/' . $package->fullname . ' && git show ' . $hash . ':composer.json' . ' 2>&1');
 
-        $this->downloadZip($package, $version, $hash,$routeInfo);
+        $this->downloadZip($package, $version, $hash, $routeInfo);
 
         $composer = json_decode($composer, JSON_FORCE_OBJECT);
 
@@ -150,7 +181,7 @@ class BoratController
         $composer['version'] = $version;
         $composer['dist'] = [
             "type" => "zip",
-            "url" => 'https://'.$_SERVER['SERVER_NAME'].'/'.$routeInfo[2]['type'].'/dists/' . $package->fullname . '/' . $this->normalizeVersion($version) . '/' . $hash . '.zip',
+            "url" => 'https://' . $_SERVER['SERVER_NAME'] . '/' . $routeInfo[2]['type'] . '/dists/' . $package->fullname . '/' . $this->normalizeVersion($version) . '/' . $hash . '.zip',
             "reference" => $hash,
             "shasum" => ""
         ];
@@ -170,15 +201,20 @@ class BoratController
         return $composer;
     }
 
-    public function normalizeVersion($version){
+    /**
+     * @param $version
+     * @return string
+     */
+    public function normalizeVersion($version)
+    {
         // Todo: rewrite function!!!
         $tmp = explode('.', $version);
-        if(count($tmp) !== 1){
-            if(count($tmp) === 2){
+        if(count($tmp) !== 1) {
+            if(count($tmp) === 2) {
                 $version .= '.0.0';
             }
-            else{
-                if(count($tmp) === 3){
+            else {
+                if(count($tmp) === 3) {
                     $version .= '.0';
                 }
             }
@@ -186,14 +222,21 @@ class BoratController
         return $version;
     }
 
-    public function generatePackage($package, array $versions,$routeInfo):array{
+    /**
+     * @param $package
+     * @param array $versions
+     * @param $routeInfo
+     * @return array
+     */
+    public function generatePackage($package, array $versions, $routeInfo): array
+    {
 
-        foreach($versions as $key => $value){
-            $cmd = 'cd '.$routeInfo[2]['type'].'/repo/' . $package->fullname . ' && git rev-list -n 1 ' . $value. ' 2>&1';
+        foreach($versions as $key => $value) {
+            $cmd = 'cd ' . $routeInfo[2]['type'] . '/repo/' . $package->fullname . ' && git rev-list -n 1 ' . $value . ' 2>&1';
             $exec = shell_exec($cmd);
             $exec = trim($exec, PHP_EOL);
 
-            $packages[$value] = $this->getComposerData($package, $value, $exec,$routeInfo);
+            $packages[$value] = $this->getComposerData($package, $value, $exec, $routeInfo);
         }
 
         return [
@@ -203,37 +246,49 @@ class BoratController
         ];
     }
 
-    public function cloneRepo($package,$routeInfo){
-        if(file_exists($routeInfo[2]['type'].'/repo/'.$package->vendor)){
-            shell_exec('rm -rf '.$routeInfo[2]['type'].'/repo/'.$package->vendor);
+    /**
+     * @param $package
+     * @param $routeInfo
+     * @throws Exception
+     */
+    public function cloneRepo($package, $routeInfo)
+    {
+        if(file_exists($routeInfo[2]['type'] . '/repo/' . $package->vendor)) {
+            shell_exec('rm -rf ' . $routeInfo[2]['type'] . '/repo/' . $package->vendor);
         }
 
-        if(!file_exists($routeInfo[2]['type'])){
+        if(!file_exists($routeInfo[2]['type'])) {
             mkdir($routeInfo[2]['type']);
         }
 
-        if(!file_exists($routeInfo[2]['type'].'/repo')){
-            mkdir($routeInfo[2]['type'].'/repo');
+        if(!file_exists($routeInfo[2]['type'] . '/repo')) {
+            mkdir($routeInfo[2]['type'] . '/repo');
         }
 
-        if(!file_exists($routeInfo[2]['type'].'/repo/'.$package->vendor)){
-            mkdir($routeInfo[2]['type'].'/repo/'.$package->vendor);
+        if(!file_exists($routeInfo[2]['type'] . '/repo/' . $package->vendor)) {
+            mkdir($routeInfo[2]['type'] . '/repo/' . $package->vendor);
         }
 
-        $command = 'cd '.$routeInfo[2]['type'].'/repo/'.$package->vendor . ' rm -rf '.$package->module . ' && git clone '.$package->repo.' '.$package->module . ' 2>&1';
+        $command = 'cd ' . $routeInfo[2]['type'] . '/repo/' . $package->vendor . ' rm -rf ' . $package->module . ' && git clone ' . $package->repo . ' ' . $package->module . ' 2>&1';
 
         $output = shell_exec($command);
 
-        if(strpos($output,'Permission denied') !== false){
+        if(strpos($output, 'Permission denied') !== false) {
             throw new Exception($output);
         }
     }
 
-    public function listVersions($package,$routeInfo):array{
-        $command = 'cd '.$routeInfo[2]['type'].'/repo/' . $package->fullname . ' && git tag -l';
+    /**
+     * @param $package
+     * @param $routeInfo
+     * @return array
+     */
+    public function listVersions($package, $routeInfo): array
+    {
+        $command = 'cd ' . $routeInfo[2]['type'] . '/repo/' . $package->fullname . ' && git tag -l';
         $output = shell_exec($command);
 
-        $output = trim($output,PHP_EOL);
+        $output = trim($output, PHP_EOL);
 
         $versions = explode(PHP_EOL, $output);
         return $versions;

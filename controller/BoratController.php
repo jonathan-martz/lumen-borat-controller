@@ -299,7 +299,6 @@ class BoratController
 
         $output = trim($output, PHP_EOL);
 
-        $versions = explode(PHP_EOL, $output);
-        return $versions;
+        return explode(PHP_EOL, $output);
     }
 }

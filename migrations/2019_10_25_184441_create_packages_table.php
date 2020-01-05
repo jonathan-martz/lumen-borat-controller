@@ -18,8 +18,6 @@ class CreatePackagesTable extends Migration
     {
         Schema::create('packages', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('vendor');
-            $table->string('module');
             $table->string('type');
             $table->string('fullname');
             $table->string('repo');

@@ -14,6 +14,11 @@ use Illuminate\Support\Facades\Hash;
 class BoratController
 {
     /**
+     * @var bool
+     */
+    public $cache = true;
+
+    /**
      * @param Request $request
      * @return mixed
      * @throws Exception
@@ -30,7 +35,7 @@ class BoratController
 
             $filename = 'cache/' . $routeInfo[2]['type'] . '.json';
 
-            if(file_exists($filename)) {
+            if(file_exists($filename) && $this->cache) {
                 $file = file_get_contents($filename);
 
                 return response()->json(
@@ -38,8 +43,7 @@ class BoratController
                 );
             }
             else {
-                $packages = DB::table('packages');
-                $packages->where('type', '=', $routeInfo[2]['type']);
+                $packages = DB::table('packages')->where('type', '=', $routeInfo[2]['type']);
 
                 if($packages->count() != 0) {
                     $json = [
@@ -57,7 +61,9 @@ class BoratController
                         ];
                     }
 
-                    file_put_contents($filename, json_encode($json));
+                    if($this->cache) {
+                        file_put_contents($filename, json_encode($json));
+                    }
 
                     return response()->json(
                         $json
@@ -89,12 +95,10 @@ class BoratController
 
             $filename = 'cache/' . $routeInfo[2]['vendor'] . '-' . $routeInfo[2]['module'] . '.json';
 
-            if(!file_exists($filename)) {
+            if(!file_exists($filename) && $this->cache) {
                 $package = DB::table('packages')
-                    ->where('vendor', '=', $routeInfo[2]['vendor'])
-                    ->where('module', '=', $routeInfo[2]['module'])
+                    ->where('fullname', '=', $routeInfo[2]['vendor'] . '/' . $routeInfo[2]['module'])
                     ->where('type', '=', $routeInfo[2]['type']);
-
 
                 if($package->count() != 0) {
                     $package = $package->first();
@@ -104,7 +108,9 @@ class BoratController
 
                     $data = $this->generatePackage($package, $versions, $routeInfo);
 
-                    file_put_contents($filename, json_encode($data));
+                    if($this->cache) {
+                        file_put_contents($filename, json_encode($data));
+                    }
 
                     return response()->json(
                         $data
@@ -143,8 +149,10 @@ class BoratController
             mkdir($routeInfo[2]['type'] . '/dists');
         }
 
-        if(!file_exists($routeInfo[2]['type'] . '/dists/' . $package->vendor)) {
-            mkdir($routeInfo[2]['type'] . '/dists/' . $package->vendor);
+        $tmp = explode('/', $package->fullname);
+
+        if(!file_exists($routeInfo[2]['type'] . '/dists/' . $tmp[0])) {
+            mkdir($routeInfo[2]['type'] . '/dists/' . $tmp[0]);
         }
 
         if(!file_exists($routeInfo[2]['type'] . '/dists/' . $package->fullname)) {
@@ -253,8 +261,9 @@ class BoratController
      */
     public function cloneRepo($package, $routeInfo)
     {
-        if(file_exists($routeInfo[2]['type'] . '/repo/' . $package->vendor)) {
-            shell_exec('rm -rf ' . $routeInfo[2]['type'] . '/repo/' . $package->vendor);
+        $tmp = explode('/', $package->fullname);
+        if(file_exists($routeInfo[2]['type'] . '/repo/' . $tmp[0])) {
+            shell_exec('rm -rf ' . $routeInfo[2]['type'] . '/repo/' . $tmp[0]);
         }
 
         if(!file_exists($routeInfo[2]['type'])) {
@@ -265,11 +274,11 @@ class BoratController
             mkdir($routeInfo[2]['type'] . '/repo');
         }
 
-        if(!file_exists($routeInfo[2]['type'] . '/repo/' . $package->vendor)) {
-            mkdir($routeInfo[2]['type'] . '/repo/' . $package->vendor);
+        if(!file_exists($routeInfo[2]['type'] . '/repo/' . $tmp[0])) {
+            mkdir($routeInfo[2]['type'] . '/repo/' . $tmp[0]);
         }
 
-        $command = 'cd ' . $routeInfo[2]['type'] . '/repo/' . $package->vendor . ' rm -rf ' . $package->module . ' && git clone ' . $package->repo . ' ' . $package->module . ' 2>&1';
+        $command = 'cd ' . $routeInfo[2]['type'] . '/repo/' . $tmp[0] . ' rm -rf ' . $tmp[1] . ' && git clone ' . $package->repo . ' ' . $tmp[1] . ' 2>&1';
 
         $output = shell_exec($command);
 
@@ -293,5 +302,4 @@ class BoratController
         $versions = explode(PHP_EOL, $output);
         return $versions;
     }
-
 }
